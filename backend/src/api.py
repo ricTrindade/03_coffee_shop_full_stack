@@ -4,8 +4,8 @@ from sqlalchemy import exc
 import json
 from flask_cors import CORS
 
-from .database.models import db_drop_and_create_all, setup_db, Drink
-from .auth.auth import AuthError, requires_auth
+from src.database.models import db_drop_and_create_all, setup_db, Drink
+from src.auth.auth import AuthError, requires_auth
 
 app = Flask(__name__)
 setup_db(app)
@@ -28,6 +28,15 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks')
+def drinks():
+    drinks_in_db = Drink.query.all()
+    drinks_json = [drink.short() for drink in drinks_in_db]
+    data = {
+        'success' : True,
+        'drinks' : drinks_json
+    }
+    return jsonify(data)
 
 
 '''
@@ -112,3 +121,6 @@ def unprocessable(error):
 @TODO implement error handler for AuthError
     error handler should conform to general task above
 '''
+
+if __name__ == '__main__':
+   app.run(host="0.0.0.0", port=5000)
