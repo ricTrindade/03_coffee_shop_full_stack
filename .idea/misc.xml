@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="Black">
+    <option name="sdkName" value="Python 3.8 (03_coffee_shop_full_stack)" />
+  </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.8 (03_coffee_shop_full_stack)" project-jdk-type="Python SDK" />
 </project>
