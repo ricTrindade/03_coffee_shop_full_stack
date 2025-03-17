@@ -11,14 +11,6 @@ app = Flask(__name__)
 setup_db(app)
 CORS(app)
 
-'''
-@TODO uncomment the following line to initialize the datbase
-!! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
-!! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
-!! Running this funciton will add one
-'''
-# db_drop_and_create_all()
-
 # ROUTES
 @app.route('/drinks')
 def drinks():
@@ -115,11 +107,6 @@ def delete_drinks(jwt_payload, drink_id):
     return data
 
 # Error Handling
-'''
-Example error handling for unprocessable entity
-'''
-
-
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
@@ -129,27 +116,30 @@ def unprocessable(error):
     }), 422
 
 
-'''
-@TODO implement error handlers using the @app.errorhandler(error) decorator
-    each error handler should return (with approprate messages):
-             jsonify({
-                    "success": False,
-                    "error": 404,
-                    "message": "resource not found"
-                    }), 404
-
-'''
-
-'''
-@TODO implement error handler for 404
-    error handler should conform to general task above
-'''
+@app.errorhandler(404)
+def resource_not_found(error):
+    jsonify({
+        "success": False,
+        "error": 404,
+        "message": "resource not found"
+    }), 404
 
 
-'''
-@TODO implement error handler for AuthError
-    error handler should conform to general task above
-'''
+@app.errorhandler(403)
+def auth_error(error):
+    jsonify({
+        "success": False,
+        "error": 403,
+        "message": "not authorised to perform this action"
+    }), 403
+
+@app.errorhandler(500)
+def internal_error(error):
+    jsonify({
+        "success": False,
+        "error": 500,
+        "message": "Internal Server Error"
+    }), 500
 
 if __name__ == '__main__':
    app.run(host="0.0.0.0", port=5000)
