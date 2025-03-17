@@ -20,14 +20,6 @@ CORS(app)
 # db_drop_and_create_all()
 
 # ROUTES
-'''
-@TODO implement endpoint
-    GET /drinks
-        it should be a public endpoint
-        it should contain only the drink.short() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
-        or appropriate status code indicating reason for failure
-'''
 @app.route('/drinks')
 def drinks():
     drinks_in_db = Drink.query.all()
@@ -39,51 +31,88 @@ def drinks():
     return jsonify(data)
 
 
-'''
-@TODO implement endpoint
-    GET /drinks-detail
-        it should require the 'get:drinks-detail' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
-        or appropriate status code indicating reason for failure
-'''
+@app.route('/drinks-detail')
+@requires_auth('get:drinks-detail')
+def drinks_detail(jwt_payload):
+    drinks_in_db = Drink.query.all()
+    drinks_json = [drink.long() for drink in drinks_in_db]
+    data = {
+        'success': True,
+        'drinks': drinks_json
+    }
+    return jsonify(data)
 
 
-'''
-@TODO implement endpoint
-    POST /drinks
-        it should create a new row in the drinks table
-        it should require the 'post:drinks' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
-        or appropriate status code indicating reason for failure
-'''
+
+@app.route('/drinks', methods=['POST'])
+@requires_auth('post:drinks')
+def post_drinks(jwt_payload):
+
+    # Get Request Data
+    request_data = request.json
+
+    # Create new Drink
+    new_drink = Drink(
+        title = request_data['title'],
+        recipe = json.dumps(request_data['recipe'])
+    )
+
+    # Insert Drink to the Db
+    try:
+        new_drink.insert()
+    except:
+        abort(500)
+
+    # Response JSON
+    data = {
+        'success': True,
+        'drinks': [new_drink.long()]
+    }
+    return data
 
 
-'''
-@TODO implement endpoint
-    PATCH /drinks/<id>
-        where <id> is the existing model id
-        it should respond with a 404 error if <id> is not found
-        it should update the corresponding row for <id>
-        it should require the 'patch:drinks' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
-        or appropriate status code indicating reason for failure
-'''
+
+@app.route('/drinks/<drink_id>', methods=['PATCH'])
+@requires_auth('patch:drinks')
+def patch_drinks(jwt_payload, drink_id):
+
+    # Get Request Data
+    request_data = request.json
+
+    # Get and Update the Drink
+    drink = Drink.query.get_or_404(drink_id)
+    drink.title = request_data['title']
+    drink.recipe = json.dumps(request_data['recipe'])
+    try:
+        drink.update()
+    except:
+        abort(500)
+
+    # Response JSON
+    data = {
+        'success': True,
+        'drinks': [drink.long()]
+    }
+    return data
 
 
-'''
-@TODO implement endpoint
-    DELETE /drinks/<id>
-        where <id> is the existing model id
-        it should respond with a 404 error if <id> is not found
-        it should delete the corresponding row for <id>
-        it should require the 'delete:drinks' permission
-    returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
-        or appropriate status code indicating reason for failure
-'''
+@app.route('/drinks/<drink_id>', methods=['DELETE'])
+@requires_auth('delete:drinks')
+def delete_drinks(jwt_payload, drink_id):
 
+    # Get and Delete the Drink
+    drink = Drink.query.get_or_404(drink_id)
+    try:
+        drink.delete()
+    except:
+        abort(500)
+
+    # Response JSON
+    data = {
+        'success': True,
+        'delete': drink_id
+    }
+    return data
 
 # Error Handling
 '''
