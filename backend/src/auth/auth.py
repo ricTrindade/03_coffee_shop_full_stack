@@ -1,5 +1,5 @@
 import json
-from flask import request, _request_ctx_stack, abort
+from flask import request, _request_ctx_stack, abort, jsonify
 from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
@@ -118,12 +118,13 @@ def requires_auth(permission=''):
             jwt_token = get_token_auth_header()
             try:
                 payload = verify_decode_jwt(jwt_token)
-            except:
-                abort(401)
-
-            # Ensure that required Permission exists in the JWT
-            check_permissions(permission, payload)
-
+                check_permissions(permission, payload)
+            except AuthError as e:
+                return jsonify({
+                    'success': False,
+                    'error': 403,
+                    'message': e.error
+                }), 403
             return f(payload, *args, **kwargs)
         return wrapper
     return requires_auth_decorator

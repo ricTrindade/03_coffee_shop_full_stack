@@ -11,6 +11,8 @@ app = Flask(__name__)
 setup_db(app)
 CORS(app)
 
+# db_drop_and_create_all()
+
 # ROUTES
 @app.route('/drinks')
 def drinks():
@@ -45,14 +47,15 @@ def post_drinks(jwt_payload):
 
     # Create new Drink
     new_drink = Drink(
-        title = request_data['title'],
-        recipe = json.dumps(request_data['recipe'])
+        title=request_data['title'],
+        recipe=json.dumps(request_data['recipe']) if 'recipe' in request_data else ''
     )
 
     # Insert Drink to the Db
     try:
         new_drink.insert()
-    except:
+    except Exception as e:
+        print(e)
         abort(500)
 
     # Response JSON
@@ -73,11 +76,14 @@ def patch_drinks(jwt_payload, drink_id):
 
     # Get and Update the Drink
     drink = Drink.query.get_or_404(drink_id)
-    drink.title = request_data['title']
-    drink.recipe = json.dumps(request_data['recipe'])
+    if 'title' in request_data:
+        drink.title = request_data['title']
+    if 'recipe' in request_data:
+        drink.recipe = json.dumps(request_data['recipe'])
     try:
         drink.update()
-    except:
+    except Exception as e:
+        print(e)
         abort(500)
 
     # Response JSON
@@ -96,7 +102,8 @@ def delete_drinks(jwt_payload, drink_id):
     drink = Drink.query.get_or_404(drink_id)
     try:
         drink.delete()
-    except:
+    except Exception as e:
+        print(e)
         abort(500)
 
     # Response JSON
@@ -118,7 +125,7 @@ def unprocessable(error):
 
 @app.errorhandler(404)
 def resource_not_found(error):
-    jsonify({
+    return jsonify({
         "success": False,
         "error": 404,
         "message": "resource not found"
@@ -127,7 +134,7 @@ def resource_not_found(error):
 
 @app.errorhandler(403)
 def auth_error(error):
-    jsonify({
+    return jsonify({
         "success": False,
         "error": 403,
         "message": "not authorised to perform this action"
@@ -135,7 +142,7 @@ def auth_error(error):
 
 @app.errorhandler(500)
 def internal_error(error):
-    jsonify({
+    return jsonify({
         "success": False,
         "error": 500,
         "message": "Internal Server Error"
